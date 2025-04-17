@@ -181,6 +181,24 @@
             animation: fadeIn 0.5s ease-in-out;
         }
         
+        .total-card {
+            margin-bottom: 15px;
+        }
+        
+        .total-one-line {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--primary);
+            text-align: center;
+            padding: 15px 20px;
+            border-radius: 12px;
+            animation: fadeIn 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .empty-message {
             padding: 40px 20px;
             text-align: center;
@@ -438,14 +456,9 @@
         </div>
         
         <!-- 합계 금액 -->
-        <div class="card fade-in">
-            <div class="card-header">
-                <i class="fas fa-receipt me-2"></i>결제 정보
-            </div>
-            <div class="card-body">
-                <div class="total-container">
-                    총 합계 금액: <span id="totalAmount">0</span> 원
-                </div>
+        <div class="card fade-in total-card">
+            <div class="total-one-line">
+                <i class="fas fa-receipt me-2"></i>총 합계 금액: <span id="totalAmount">0</span> 원
             </div>
         </div>
     </div>
@@ -730,10 +743,24 @@
             
             // 총 합계 금액 업데이트
             const totalAmountElem = document.getElementById('totalAmount');
-            fadeOut(totalAmountElem, 200, function() {
-                totalAmountElem.textContent = formatNumber(totalAmount);
-                fadeIn(totalAmountElem, 200);
-            });
+            const currentText = totalAmountElem.textContent;
+            const newText = formatNumber(totalAmount);
+            
+            if (currentText !== newText) {
+                totalAmountElem.style.transition = 'color 0.3s';
+                totalAmountElem.style.color = '#ffffff';
+                
+                setTimeout(function() {
+                    totalAmountElem.textContent = newText;
+                    totalAmountElem.style.color = '#ffeb3b'; // 밝은 노란색으로 강조
+                    
+                    setTimeout(function() {
+                        totalAmountElem.style.color = '#ffffff'; // 다시 원래 색상으로
+                    }, 500);
+                }, 200);
+            } else {
+                totalAmountElem.textContent = newText;
+            }
         }
         
         // 전화번호 자동 하이픈 추가 함수
