@@ -1,0 +1,645 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음식 주문 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --secondary: #4ecdc4;
+            --accent: #ff6b6b;
+            --background: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #343a40;
+            --text-light: #6c757d;
+            --border: #dee2e6;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px 0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            padding: 0 20px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            background-color: var(--card-bg);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 25px;
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+            padding: 15px 20px;
+            border-bottom: none;
+            text-align: center;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+            text-align: center;
+            padding: 15px 0;
+        }
+        
+        .btn {
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+        
+        .btn-success:hover, .btn-success:focus {
+            background-color: #3dbeb6;
+            border-color: #3dbeb6;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+        
+        .btn-danger {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .btn-danger:hover, .btn-danger:focus {
+            background-color: #ff5252;
+            border-color: #ff5252;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .form-control, .input-group-text {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .input-group > .form-control:not(:last-child),
+        .input-group > .input-group-text:not(:last-child) {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .input-group > .form-control:not(:first-child),
+        .input-group > .btn:not(:first-child) {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        
+        .input-group-text {
+            background-color: #f1f3f5;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
+        }
+        
+        .table thead {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .table thead th {
+            font-weight: 500;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .total-container {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            padding: 15px 20px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .empty-message {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .empty-message i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 15px;
+            color: #ced4da;
+        }
+        
+        .card-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .phone-container {
+            background: linear-gradient(135deg, #1a73e8 0%, #6c5ce7 100%);
+            color: white;
+            padding: 5px;
+        }
+        
+        .phone-container .card-body {
+            background: white;
+            border-radius: 8px;
+            color: var(--text);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .error-message {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+            text-align: center;
+        }
+        
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .highlight {
+            animation: highlight 1s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(26, 115, 232, 0.2); }
+            100% { background-color: transparent; }
+        }
+        
+        /* 로딩 스피너 */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+            background-color: var(--primary);
+            border-radius: 100%;  
+            animation: sk-scaleout 1.0s infinite ease-in-out;
+        }
+
+        @keyframes sk-scaleout {
+            0% { transform: scale(0) }
+            100% { transform: scale(1.0); opacity: 0; }
+        }
+        
+        /* 테이블 반응형 */
+        @media (max-width: 767.98px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+            .total-container {
+                text-align: center;
+                font-size: 1.25rem;
+            }
+            .btn {
+                padding: 8px 16px;
+            }
+        }
+        
+        /* 중앙 정렬 추가 스타일 */
+        .input-group {
+            margin: 0 auto;
+            max-width: 500px;
+        }
+        
+        .row {
+            justify-content: center;
+        }
+        
+        /* 테이블 셀 정렬 조정 */
+        .text-center {
+            text-align: center !important;
+        }
+        
+        .text-end {
+            text-align: center !important; /* 오른쪽 정렬을 중앙 정렬로 변경 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">음식 주문 시스템</h1>
+        
+        <!-- 전화번호 입력 영역 -->
+        <div class="card phone-container fade-in">
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="text" id="phoneNumber" class="form-control" placeholder="전화번호를 입력하세요 (예: 010-1234-5678)">
+                            <button class="btn btn-primary" id="callButton">
+                                <i class="fas fa-phone-alt me-2"></i>전화하기
+                            </button>
+                        </div>
+                        <div id="phoneError" class="error-message">
+                            <i class="fas fa-exclamation-circle me-1"></i>유효한 전화번호를 입력해주세요.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 메뉴 입력 폼 -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <i class="fas fa-utensils me-2"></i>메뉴 추가
+            </div>
+            <div class="card-body">
+                <div class="row g-3 justify-content-center">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-hamburger"></i></span>
+                            <input type="text" id="foodName" class="form-control" placeholder="음식명">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-won-sign"></i></span>
+                            <input type="number" id="unitPrice" class="form-control" min="0" placeholder="단가">
+                            <span class="input-group-text">원</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-sort-amount-up"></i></span>
+                            <input type="number" id="quantity" class="form-control" min="1" value="1" placeholder="수량">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button id="addButton" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>메뉴 추가
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 주문 테이블 -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <i class="fas fa-clipboard-list me-2"></i>주문 내역
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="orderTable" class="table table-striped table-bordered" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th width="30%">음식명</th>
+                                <th width="20%">단가</th>
+                                <th width="15%">수량</th>
+                                <th width="20%">금액</th>
+                                <th width="15%">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <!-- 주문 항목이 여기에 동적으로 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 테이블이 비어있을 때 메시지 -->
+                <div id="emptyTableMessage" class="empty-message">
+                    <i class="fas fa-shopping-cart"></i>
+                    주문 항목이 없습니다. 메뉴를 추가해 주세요.
+                </div>
+                
+                <!-- 로딩 스피너 (필요시 표시) -->
+                <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- 합계 금액 -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <i class="fas fa-receipt me-2"></i>결제 정보
+            </div>
+            <div class="card-body">
+                <div class="total-container">
+                    총 합계 금액: <span id="totalAmount">0</span> 원
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 성공 알림 모달 -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>성공</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p id="successMessage" class="mb-0">메뉴가 성공적으로 추가되었습니다!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 전역 변수
+            let orderItems = [];
+            let itemCounter = 0;
+            
+            // 성공 모달 객체
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            
+            // 초기 UI 업데이트
+            updateUI();
+            
+            // 추가하기 버튼 클릭 이벤트
+            $('#addButton').click(function() {
+                // 입력값 가져오기
+                const foodName = $('#foodName').val().trim();
+                const unitPrice = parseInt($('#unitPrice').val()) || 0;
+                const quantity = parseInt($('#quantity').val()) || 1;
+                
+                // 입력 검증
+                if (!foodName) {
+                    showError('음식명을 입력해주세요.');
+                    $('#foodName').focus();
+                    return;
+                }
+                
+                if (unitPrice <= 0) {
+                    showError('올바른 단가를 입력해주세요.');
+                    $('#unitPrice').focus();
+                    return;
+                }
+                
+                // 금액 계산
+                const amount = unitPrice * quantity;
+                
+                // 새 항목 객체 생성
+                const newItem = {
+                    id: itemCounter++,
+                    foodName: foodName,
+                    unitPrice: unitPrice,
+                    quantity: quantity,
+                    amount: amount
+                };
+                
+                // 로딩 표시 (애니메이션 효과)
+                showLoading(true);
+                
+                // 애니메이션을 위한 타임아웃 (실제로는 서버 처리 시간이 될 수 있음)
+                setTimeout(function() {
+                    // 배열에 추가
+                    orderItems.push(newItem);
+                    
+                    // UI 업데이트
+                    updateUI();
+                    
+                    // 로딩 숨기기
+                    showLoading(false);
+                    
+                    // 입력 필드 초기화
+                    $('#foodName').val('');
+                    $('#unitPrice').val('');
+                    $('#quantity').val(1);
+                    $('#foodName').focus();
+                    
+                    // 성공 메시지 표시
+                    showSuccess(`"${foodName}" 메뉴가 성공적으로 추가되었습니다!`);
+                }, 300);
+            });
+            
+            // 전화하기 버튼 클릭 이벤트
+            $('#callButton').click(function() {
+                const phoneNumber = $('#phoneNumber').val().trim();
+                
+                if (!phoneNumber) {
+                    $('#phoneError').text('전화번호를 입력해주세요.').show();
+                    $('#phoneNumber').focus();
+                    return;
+                }
+                
+                // 서버에 전화번호 유효성 검증 요청
+                fetch('/validate_phone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone: phoneNumber })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        // 유효한 번호인 경우
+                        $('#phoneError').hide();
+                        
+                        // 전화 걸기 (모바일에서 작동)
+                        const cleanNumber = phoneNumber.replace(/-/g, '');
+                        window.location.href = `tel:${cleanNumber}`;
+                    } else {
+                        // 유효하지 않은 번호
+                        $('#phoneError').text('유효한 전화번호를 입력해주세요. (예: 010-1234-5678)').show();
+                        $('#phoneNumber').focus();
+                    }
+                })
+                .catch(error => {
+                    console.error('오류:', error);
+                    $('#phoneError').text('전화번호 확인 중 오류가 발생했습니다.').show();
+                });
+            });
+            
+            // 테이블 항목 삭제 이벤트 위임
+            $('#orderTableBody').on('click', '.delete-btn', function() {
+                const itemId = $(this).data('id');
+                const row = $(this).closest('tr');
+                
+                // 애니메이션 효과
+                row.css('background-color', '#ffebee');
+                row.fadeOut(300, function() {
+                    // 배열에서 해당 항목 제거
+                    orderItems = orderItems.filter(item => item.id !== itemId);
+                    
+                    // UI 업데이트
+                    updateUI();
+                });
+            });
+            
+            // UI 업데이트 함수
+            function updateUI() {
+                const $tableBody = $('#orderTableBody');
+                $tableBody.empty();
+                
+                // 합계 계산
+                let totalAmount = 0;
+                
+                // 테이블 행 추가
+                if (orderItems.length > 0) {
+                    orderItems.forEach((item, index) => {
+                        totalAmount += item.amount;
+                        
+                        const $row = $('<tr>').addClass('fade-in');
+                        $row.append(`<td>${item.foodName}</td>`);
+                        $row.append(`<td class="text-center">${formatNumber(item.unitPrice)} 원</td>`);
+                        $row.append(`<td class="text-center">${item.quantity}</td>`);
+                        $row.append(`<td class="text-center">${formatNumber(item.amount)} 원</td>`);
+                        $row.append(`<td class="text-center">
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>`);
+                        
+                        $tableBody.append($row);
+                        
+                        // 새로 추가된 행에 하이라이트 애니메이션 적용
+                        if (index === orderItems.length - 1) {
+                            $row.addClass('highlight');
+                        }
+                    });
+                    
+                    // 테이블 표시 및 빈 메시지 숨기기
+                    $('#orderTable').fadeIn(300);
+                    $('#emptyTableMessage').hide();
+                } else {
+                    // 테이블 숨기기 및 빈 메시지 표시
+                    $('#orderTable').hide();
+                    $('#emptyTableMessage').fadeIn(300);
+                }
+                
+                // 총 합계 금액 업데이트 (애니메이션 효과)
+                const $totalAmount = $('#totalAmount');
+                $totalAmount.fadeOut(200, function() {
+                    $(this).text(formatNumber(totalAmount)).fadeIn(200);
+                });
+            }
+            
+            // 숫자 포맷팅 (천 단위 구분)
+            function formatNumber(num) {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            
+            // 로딩 표시/숨기기
+            function showLoading(show) {
+                if (show) {
+                    $('#loadingSpinner').fadeIn(200);
+                } else {
+                    $('#loadingSpinner').fadeOut(200);
+                }
+            }
+            
+            // 오류 메시지 표시
+            function showError(message) {
+                alert(message); // 간단한 alert로 표시. 실제로는 더 세련된 알림창을 구현할 수 있습니다.
+            }
+            
+            // 성공 메시지 표시
+            function showSuccess(message) {
+                $('#successMessage').text(message);
+                successModal.show();
+                
+                // 3초 후 자동으로 닫기
+                setTimeout(function() {
+                    successModal.hide();
+                }, 3000);
+            }
+            
+            // 전화번호 입력 필드 포커스 이벤트
+            $('#phoneNumber').focus(function() {
+                $('#phoneError').hide();
+            });
+            
+            // 숫자 입력 필드 값 변경 시 이벤트
+            $('#unitPrice, #quantity').on('input', function() {
+                // 음수 입력 방지
+                if ($(this).val() < 0) {
+                    $(this).val(0);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
