@@ -331,6 +331,14 @@
         #callButton:focus:not(:active)::after {
             animation: ripple 1s ease-out;
         }
+
+        /* 전화번호 형식 예시 안내 */
+        .phone-hint {
+            color: var(--text-light);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -344,10 +352,13 @@
                     <div class="col-md-10">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                            <input type="text" id="phoneNumber" class="form-control" placeholder="전화번호를 입력하세요 (예: 010-1234-5678)">
+                            <input type="text" id="phoneNumber" class="form-control" placeholder="전화번호를 입력하세요">
                             <button class="btn btn-primary" id="callButton">
                                 <i class="fas fa-phone-alt me-2"></i>전화하기
                             </button>
+                        </div>
+                        <div class="phone-hint">
+                            모바일(예: 010-1234-5678) 또는 일반전화(예: 02-123-4567, 062-720-2613)
                         </div>
                         <div id="phoneError" class="error-message">
                             <i class="fas fa-exclamation-circle me-1"></i>유효한 전화번호를 입력해주세요.
@@ -553,12 +564,15 @@
                 }, 300);
             });
             
-            // 전화하기 버튼 클릭 이벤트 - 직접 전화 걸기로 수정
+            // 전화하기 버튼 클릭 이벤트
             $('#callButton').click(function() {
                 const phoneNumber = $('#phoneNumber').val().trim();
                 
-                // 전화번호 유효성 검사 (클라이언트 측에서 처리)
-                const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
+                // 전화번호 유효성 검사 - 휴대폰과 일반전화 모두 허용
+                // 휴대폰: 010, 011, 016, 017, 018, 019로 시작하는 번호
+                // 일반전화: 지역번호(02, 031, 032, 등) + 국번 + 번호
+                const mobileRegex = /^01([0|1|6|7|8|9])[-\s]?([0-9]{3,4})[-\s]?([0-9]{4})$/;
+                const landlineRegex = /^(0[2-6][0-9]|70|080)[-\s]?([0-9]{3,4})[-\s]?([0-9]{4})$/;
                 
                 if (!phoneNumber) {
                     $('#phoneError').text('전화번호를 입력해주세요.').show();
@@ -566,8 +580,8 @@
                     return;
                 }
                 
-                if (!phoneRegex.test(phoneNumber)) {
-                    $('#phoneError').text('유효한 전화번호를 입력해주세요. (예: 010-1234-5678)').show();
+                if (!mobileRegex.test(phoneNumber) && !landlineRegex.test(phoneNumber)) {
+                    $('#phoneError').text('유효한 전화번호를 입력해주세요.').show();
                     $('#phoneNumber').focus();
                     return;
                 }
@@ -578,7 +592,25 @@
                 // 전화번호 표시 형식 정리 (확인 모달용)
                 let displayNumber = phoneNumber;
                 if (!phoneNumber.includes('-')) {
-                    displayNumber = phoneNumber.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                    // 전화번호 형식에 따라 다르게 처리
+                    if (mobileRegex.test(phoneNumber)) {
+                        // 휴대폰 번호: 000-0000-0000
+                        displayNumber = phoneNumber.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                    } else if (phoneNumber.startsWith('02')) {
+                        // 서울 지역번호(02): 02-000-0000 또는 02-0000-0000
+                        if (phoneNumber.length <= 9) { // 전체 길이가 9자리 이하인 경우 (02-000-0000)
+                            displayNumber = phoneNumber.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
+                        } else { // 전체 길이가 10자리인 경우 (02-0000-0000)
+                            displayNumber = phoneNumber.replace(/(\d{2})(\d{4})(\d{4})/, '$1-$2-$3');
+                        }
+                    } else {
+                        // 그 외 지역번호: 000-000-0000 또는 000-0000-0000
+                        if (phoneNumber.length <= 11) { // 전체 길이가 11자리 이하인 경우
+                            displayNumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+                        } else { // 더 긴 경우
+                            displayNumber = phoneNumber.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+                        }
+                    }
                 }
                 
                 // 확인 모달에 전화번호 표시
@@ -594,12 +626,12 @@
                 const phoneNumber = $('#phoneNumber').val().trim();
                 
                 // 하이픈 제거 (전화 연결용)
-                const cleanNumber = phoneNumber.replace(/-/g, '');
+                const cleanNumber = phoneNumber.replace(/[-\s]/g, '');
                 
                 // 모달 닫기
                 callConfirmModal.hide();
                 
-                // 전화 걸기 (모바일에서 작동)
+                // 전화 걸기
                 window.location.href = `tel:${cleanNumber}`;
                 
                 // 애니메이션 효과 (전화 연결 시 버튼 강조)
@@ -685,69 +717,3 @@
                 } else {
                     $('#loadingSpinner').fadeOut(200);
                 }
-            }
-            
-            // 오류 메시지 표시
-            function showError(message) {
-                alert(message); // 간단한 alert로 표시
-            }
-            
-            // 성공 메시지 표시
-            function showSuccess(message) {
-                $('#successMessage').text(message);
-                successModal.show();
-                
-                // 3초 후 자동으로 닫기
-                setTimeout(function() {
-                    successModal.hide();
-                }, 3000);
-            }
-            
-            // 전화번호 입력 필드 포커스 이벤트
-            $('#phoneNumber').focus(function() {
-                $('#phoneError').hide();
-            });
-            
-            // 전화번호 입력 시 자동 하이픈 추가
-            $('#phoneNumber').on('input', function() {
-                let value = $(this).val().replace(/[^0-9]/g, ''); // 숫자만 추출
-                
-                if (value.length > 3 && value.length <= 7) {
-                    value = value.substring(0, 3) + '-' + value.substring(3);
-                } else if (value.length > 7) {
-                    value = value.substring(0, 3) + '-' + value.substring(3, 7) + '-' + value.substring(7, 11);
-                }
-                
-                // 길이 제한 (최대 13자: 000-0000-0000 형식)
-                if (value.length > 13) {
-                    value = value.substring(0, 13);
-                }
-                
-                $(this).val(value);
-                
-                // 입력 시 오류 메시지 숨기기
-                $('#phoneError').hide();
-            });
-            
-            // 숫자 입력 필드 값 변경 시 이벤트
-            $('#unitPrice, #quantity').on('input', function() {
-                // 음수 입력 방지
-                if ($(this).val() < 0) {
-                    $(this).val(0);
-                }
-            });
-            
-            // 모달 초기화
-            try {
-                // 모달 객체가 이미 생성되어 있을 수 있으므로 에러 처리
-                callConfirmModal._element;
-            } catch (e) {
-                // 오류가 발생하면 모달 요소를 직접 조작
-                $('#callConfirmModal').on('shown.bs.modal', function() {
-                    $('#confirmCallButton').focus();
-                });
-            }
-        });
-    </script>
-</body>
-</html>
