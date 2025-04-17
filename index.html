@@ -197,6 +197,99 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        #printButton {
+            font-weight: 600;
+            border-radius: 30px;
+            background-color: white;
+            color: var(--primary);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        #printButton:hover {
+            background-color: #f0f0f0;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* 인쇄 모드 스타일 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .container, .card, .card-header, .card-body, .table-responsive, #orderTable, 
+            #orderTable thead, #orderTable tbody, #orderTable tr, #orderTable th, #orderTable td,
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            
+            .container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 10px;
+            }
+            
+            .print-title {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            
+            .print-date {
+                font-size: 14px;
+                color: #666;
+            }
+            
+            .print-total {
+                text-align: right;
+                font-weight: bold;
+                font-size: 18px;
+                margin-top: 20px;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+            }
+            
+            .delete-btn, #callButton, #addButton, #printButton {
+                display: none !important;
+            }
+            
+            .card, .phone-container, #emptyTableMessage, #loadingSpinner {
+                display: none !important;
+            }
+            
+            .card.fade-in:nth-child(3) {
+                display: block !important;
+                box-shadow: none;
+                border: none;
+            }
+            
+            .card-header {
+                background-color: white !important;
+                color: black !important;
+                border-bottom: 2px solid #333;
+            }
+            
+            .table thead {
+                background-color: #f0f0f0 !important;
+                color: black !important;
+            }
+            
+            .table {
+                border: 1px solid #ddd;
+            }
         }
         
         .empty-message {
@@ -466,7 +559,31 @@
         </div>
     </div>
     
-    <!-- 성공 알림 모달 -->
+    <!-- 인쇄용 템플릿 (평소에는 안 보임) -->
+    <div id="printTemplate" style="display: none;">
+        <div class="print-section">
+            <div class="print-header">
+                <div class="print-title">음식 주문 내역서</div>
+                <div class="print-date" id="printDate"></div>
+                <div class="print-phone" id="printPhone"></div>
+            </div>
+            <table class="table table-bordered" id="printTable">
+                <thead>
+                    <tr>
+                        <th width="40%">음식명</th>
+                        <th width="20%">단가</th>
+                        <th width="15%">수량</th>
+                        <th width="25%">금액</th>
+                    </tr>
+                </thead>
+                <tbody id="printTableBody">
+                </tbody>
+            </table>
+            <div class="print-total">
+                총 합계 금액: <span id="printTotalAmount"></span> 원
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -883,6 +1000,72 @@
             }
             
             window.requestAnimationFrame(step);
+        }
+        
+        // 주문 목록 출력 함수
+        function printOrderList() {
+            // 주문 항목이 없는 경우 경고 표시
+            if (orderItems.length === 0) {
+                alert('출력할 주문 내역이 없습니다. 메뉴를 추가해 주세요.');
+                return;
+            }
+            
+            // 현재 날짜와 시간 포맷팅
+            const now = new Date();
+            const dateStr = now.getFullYear() + '년 ' + 
+                           (now.getMonth() + 1) + '월 ' + 
+                           now.getDate() + '일 ' + 
+                           now.getHours() + '시 ' + 
+                           now.getMinutes() + '분';
+            
+            // 전화번호 정보 가져오기
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            // 인쇄용 템플릿 정보 채우기
+            document.getElementById('printDate').textContent = '주문 일시: ' + dateStr;
+            
+            if (phoneNumber) {
+                document.getElementById('printPhone').textContent = '연락처: ' + phoneNumber;
+                document.getElementById('printPhone').style.display = 'block';
+            } else {
+                document.getElementById('printPhone').style.display = 'none';
+            }
+            
+            // 주문 테이블 복제
+            const originalTable = document.getElementById('orderTable');
+            const tableClone = originalTable.cloneNode(true);
+            
+            // 클론된 테이블에서 작업 열 삭제
+            const rows = tableClone.querySelectorAll('tr');
+            rows.forEach(row => {
+                const lastCell = row.cells[row.cells.length - 1];
+                if (lastCell) {
+                    row.removeChild(lastCell);
+                }
+            });
+            
+            // 테이블 헤더의 마지막 열(작업) 제거
+            const headerRow = tableClone.querySelector('thead tr');
+            if (headerRow && headerRow.cells.length > 0) {
+                headerRow.removeChild(headerRow.cells[headerRow.cells.length - 1]);
+            }
+            
+            // 인쇄용 테이블에 추가
+            const printTableContainer = document.getElementById('printOrderTable');
+            printTableContainer.innerHTML = '';
+            printTableContainer.appendChild(tableClone);
+            
+            // 총 합계 금액 설정
+            let totalAmount = 0;
+            orderItems.forEach(item => {
+                totalAmount += item.amount;
+            });
+            document.getElementById('printTotalAmount').textContent = formatNumber(totalAmount);
+            
+            // 인쇄 다이얼로그 열기
+            setTimeout(() => {
+                window.print();
+            }, 300);
         }
     </script>
 </body>
