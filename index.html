@@ -553,7 +553,7 @@
                 }, 300);
             });
             
-            // 전화하기 버튼 클릭 이벤트
+            // 전화하기 버튼 클릭 이벤트 - 직접 전화 걸기로 수정
             $('#callButton').click(function() {
                 const phoneNumber = $('#phoneNumber').val().trim();
                 
@@ -736,6 +736,17 @@
                     $(this).val(0);
                 }
             });
+            
+            // 모달 초기화
+            try {
+                // 모달 객체가 이미 생성되어 있을 수 있으므로 에러 처리
+                callConfirmModal._element;
+            } catch (e) {
+                // 오류가 발생하면 모달 요소를 직접 조작
+                $('#callConfirmModal').on('shown.bs.modal', function() {
+                    $('#confirmCallButton').focus();
+                });
+            }
         });
     </script>
 </body>
