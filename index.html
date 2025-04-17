@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -297,6 +296,41 @@
         .text-end {
             text-align: center !important; /* 오른쪽 정렬을 중앙 정렬로 변경 */
         }
+        
+        /* 전화 연결 버튼 강조 효과 */
+        #callButton {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #callButton:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        #callButton:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -423,6 +457,30 @@
         </div>
     </div>
     
+    <!-- 전화 연결 확인 모달 -->
+    <div class="modal fade" id="callConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-phone-alt me-2"></i>전화 연결</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p id="callConfirmMessage" class="mb-0">입력하신 번호로 전화 연결을 하시겠습니까?</p>
+                    <div class="mt-3">
+                        <span class="badge bg-primary fs-6" id="displayPhoneNumber"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" id="confirmCallButton">
+                        <i class="fas fa-phone-alt me-2"></i>전화 걸기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -431,8 +489,9 @@
             let orderItems = [];
             let itemCounter = 0;
             
-            // 성공 모달 객체
+            // 모달 객체
             const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            const callConfirmModal = new bootstrap.Modal(document.getElementById('callConfirmModal'));
             
             // 초기 UI 업데이트
             updateUI();
@@ -498,39 +557,56 @@
             $('#callButton').click(function() {
                 const phoneNumber = $('#phoneNumber').val().trim();
                 
+                // 전화번호 유효성 검사 (클라이언트 측에서 처리)
+                const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
+                
                 if (!phoneNumber) {
                     $('#phoneError').text('전화번호를 입력해주세요.').show();
                     $('#phoneNumber').focus();
                     return;
                 }
                 
-                // 서버에 전화번호 유효성 검증 요청
-                fetch('/validate_phone', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ phone: phoneNumber })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.valid) {
-                        // 유효한 번호인 경우
-                        $('#phoneError').hide();
-                        
-                        // 전화 걸기 (모바일에서 작동)
-                        const cleanNumber = phoneNumber.replace(/-/g, '');
-                        window.location.href = `tel:${cleanNumber}`;
-                    } else {
-                        // 유효하지 않은 번호
-                        $('#phoneError').text('유효한 전화번호를 입력해주세요. (예: 010-1234-5678)').show();
-                        $('#phoneNumber').focus();
-                    }
-                })
-                .catch(error => {
-                    console.error('오류:', error);
-                    $('#phoneError').text('전화번호 확인 중 오류가 발생했습니다.').show();
-                });
+                if (!phoneRegex.test(phoneNumber)) {
+                    $('#phoneError').text('유효한 전화번호를 입력해주세요. (예: 010-1234-5678)').show();
+                    $('#phoneNumber').focus();
+                    return;
+                }
+                
+                // 전화번호 오류 메시지 숨기기
+                $('#phoneError').hide();
+                
+                // 전화번호 표시 형식 정리 (확인 모달용)
+                let displayNumber = phoneNumber;
+                if (!phoneNumber.includes('-')) {
+                    displayNumber = phoneNumber.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                }
+                
+                // 확인 모달에 전화번호 표시
+                $('#displayPhoneNumber').text(displayNumber);
+                
+                // 전화 연결 확인 모달 표시
+                callConfirmModal.show();
+            });
+            
+            // 전화 연결 확인 버튼 클릭 이벤트
+            $('#confirmCallButton').click(function() {
+                // 전화번호 가져오기
+                const phoneNumber = $('#phoneNumber').val().trim();
+                
+                // 하이픈 제거 (전화 연결용)
+                const cleanNumber = phoneNumber.replace(/-/g, '');
+                
+                // 모달 닫기
+                callConfirmModal.hide();
+                
+                // 전화 걸기 (모바일에서 작동)
+                window.location.href = `tel:${cleanNumber}`;
+                
+                // 애니메이션 효과 (전화 연결 시 버튼 강조)
+                $('#callButton').addClass('btn-success').removeClass('btn-primary');
+                setTimeout(function() {
+                    $('#callButton').addClass('btn-primary').removeClass('btn-success');
+                }, 1000);
             });
             
             // 테이블 항목 삭제 이벤트 위임
@@ -613,7 +689,7 @@
             
             // 오류 메시지 표시
             function showError(message) {
-                alert(message); // 간단한 alert로 표시. 실제로는 더 세련된 알림창을 구현할 수 있습니다.
+                alert(message); // 간단한 alert로 표시
             }
             
             // 성공 메시지 표시
@@ -629,6 +705,27 @@
             
             // 전화번호 입력 필드 포커스 이벤트
             $('#phoneNumber').focus(function() {
+                $('#phoneError').hide();
+            });
+            
+            // 전화번호 입력 시 자동 하이픈 추가
+            $('#phoneNumber').on('input', function() {
+                let value = $(this).val().replace(/[^0-9]/g, ''); // 숫자만 추출
+                
+                if (value.length > 3 && value.length <= 7) {
+                    value = value.substring(0, 3) + '-' + value.substring(3);
+                } else if (value.length > 7) {
+                    value = value.substring(0, 3) + '-' + value.substring(3, 7) + '-' + value.substring(7, 11);
+                }
+                
+                // 길이 제한 (최대 13자: 000-0000-0000 형식)
+                if (value.length > 13) {
+                    value = value.substring(0, 13);
+                }
+                
+                $(this).val(value);
+                
+                // 입력 시 오류 메시지 숨기기
                 $('#phoneError').hide();
             });
             
